@@ -5,7 +5,7 @@ import {
 import { translateXY, columnsByPin, columnGroupWidths, RowHeightCache } from '../../utils';
 import { SelectionType } from '../../types';
 import { ScrollerComponent } from './scroller.component';
-import { mouseEvent } from '../../events';
+import { MouseEvent } from '../../events';
 
 @Component({
   selector: 'datatable-body',
@@ -44,7 +44,7 @@ import { mouseEvent } from '../../events';
           [rowIndex]="getRowIndex(group[i])"
           (rowContextmenu)="rowContextmenu.emit($event)">
           <datatable-body-row 
-            *ngIf="!group.value"        
+            *ngIf="!groupedRows; else groupedRowsTemplate"        
             tabindex="-1"
             [isSelected]="selector.getRowSelected(group)"
             [innerWidth]="innerWidth"
@@ -55,23 +55,26 @@ import { mouseEvent } from '../../events';
             [rowIndex]="getRowIndex(group)"
             [expanded]="getRowExpanded(group)"            
             [rowClass]="rowClass"
+            [displayCheck]="displayCheck"
             (activate)="selector.onActivate($event, indexes.first + i)">
-          </datatable-body-row>                       
-          <datatable-body-row
-            *ngFor="let row of group.value; let i = index; trackBy: rowTrackingFn;"
-            tabindex="-1"
-            [isSelected]="selector.getRowSelected(row)"
-            [innerWidth]="innerWidth"
-            [offsetX]="offsetX"
-            [columns]="columns"
-            [rowHeight]="getRowHeight(row)"
-            [row]="row"
-            [group]="group.value"
-            [rowIndex]="getRowIndex(row)"
-            [expanded]="getRowExpanded(row)"
-            [rowClass]="rowClass"
-            (activate)="selector.onActivate($event, i)">
           </datatable-body-row>
+          <ng-template #groupedRowsTemplate>
+            <datatable-body-row
+              *ngFor="let row of group.value; let i = index; trackBy: rowTrackingFn;"
+              tabindex="-1"
+              [isSelected]="selector.getRowSelected(row)"
+              [innerWidth]="innerWidth"
+              [offsetX]="offsetX"
+              [columns]="columns"
+              [rowHeight]="getRowHeight(row)"
+              [row]="row"
+              [group]="group.value"
+              [rowIndex]="getRowIndex(row)"
+              [expanded]="getRowExpanded(row)"
+              [rowClass]="rowClass"
+              (activate)="selector.onActivate($event, i)">
+            </datatable-body-row>
+          </ng-template>
         </datatable-row-wrapper>
       </datatable-scroller>
       <div
@@ -101,6 +104,7 @@ export class DataTableBodyComponent implements OnInit, OnDestroy {
   @Input() rowDetail: any;
   @Input() groupHeader: any;
   @Input() selectCheck: any;
+  @Input() displayCheck: any;
   @Input() trackByProp: string;
   @Input() rowClass: any;
   @Input() groupedRows: any;
@@ -201,10 +205,12 @@ export class DataTableBodyComponent implements OnInit, OnDestroy {
    * based on the row heights cache for virtual scroll. Other scenarios
    * calculate scroll height automatically (as height will be undefined).
    */
-  get scrollHeight(): number {
+  get scrollHeight(): number | undefined {
     if (this.scrollbarV) {
       return this.rowHeightsCache.query(this.rowCount - 1);
     }
+    // avoid TS7030: Not all code paths return a value.
+    return undefined;
   }
 
   rowHeightsCache: RowHeightCache = new RowHeightCache();
@@ -230,7 +236,7 @@ export class DataTableBodyComponent implements OnInit, OnDestroy {
    */
   constructor(private cd: ChangeDetectorRef) {
     // declare fn here so we can get access to the `this` property
-    this.rowTrackingFn = function(index: number, row: any): any {
+    this.rowTrackingFn = function(this: any, index: number, row: any): any {
       const idx = this.getRowIndex(row);
       if (this.trackByProp) {
         return `${idx}-${this.trackByProp}`;
@@ -332,7 +338,7 @@ export class DataTableBodyComponent implements OnInit, OnDestroy {
     if (direction === 'up') {
       offset = Math.ceil(offset);
     } else if (direction === 'down') {
-      offset = Math.ceil(offset);
+      offset = Math.floor(offset);
     }
 
     if (direction !== undefined && !isNaN(offset)) {

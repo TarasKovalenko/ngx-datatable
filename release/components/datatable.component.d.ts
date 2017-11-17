@@ -177,6 +177,15 @@ export declare class DatatableComponent implements OnInit, DoCheck, AfterViewIni
      */
     selectCheck: any;
     /**
+     * A function you can use to check whether you want
+     * to show the checkbox for a particular row based on a criteria. Example:
+     *
+     *    (row, column, value) => {
+     *      return row.name !== 'Ethel Price';
+     *    }
+     */
+    displayCheck: (row: any, column?: any, value?: any) => boolean;
+    /**
      * A boolean you can use to set the detault behaviour of rows and groups
      * whether they will start expanded or not. If ommited the default is NOT expanded.
      *
@@ -306,6 +315,7 @@ export declare class DatatableComponent implements OnInit, DoCheck, AfterViewIni
     rowDiffer: KeyValueDiffer<{}, {}>;
     _limit: number | undefined;
     _count: number;
+    _offset: number;
     _rows: any[];
     _groupRowsBy: string;
     _internalRows: any[];
@@ -354,7 +364,7 @@ export declare class DatatableComponent implements OnInit, DoCheck, AfterViewIni
      * Recalulcates the column widths based on column width
      * distribution mode and scrollbar offsets.
      */
-    recalculateColumns(columns?: any[], forceIdx?: number, allowBleed?: boolean): any[];
+    recalculateColumns(columns?: any[], forceIdx?: number, allowBleed?: boolean): any[] | undefined;
     /**
      * Recalculates the dimensions of the table size.
      * Internally calls the page size and row count calcs too.

@@ -75,11 +75,6 @@ var DatatableComponent = /** @class */ (function () {
          */
         this.externalSorting = false;
         /**
-         * The current offset ( page - 1 ) shown.
-         * Default value: `0`
-         */
-        this.offset = 0;
-        /**
          * Show the linear loading bar.
          * Default value: `false`
          */
@@ -175,6 +170,7 @@ var DatatableComponent = /** @class */ (function () {
         this.rowCount = 0;
         this.offsetX = 0;
         this._count = 0;
+        this._offset = 0;
         // get ref to elm for measuring
         this.element = element.nativeElement;
         this.rowDiffer = differs.find({}).create();
@@ -283,6 +279,20 @@ var DatatableComponent = /** @class */ (function () {
             this._count = val;
             // recalculate sizes/etc
             this.recalculate();
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(DatatableComponent.prototype, "offset", {
+        get: function () {
+            return Math.max(Math.min(this._offset, Math.ceil(this.rowCount / this.pageSize) - 1), 0);
+        },
+        /**
+         * The current offset ( page - 1 ) shown.
+         * Default value: `0`
+         */
+        set: function (val) {
+            this._offset = val;
         },
         enumerable: true,
         configurable: true
@@ -500,7 +510,7 @@ var DatatableComponent = /** @class */ (function () {
     DatatableComponent.prototype.ngDoCheck = function () {
         if (this.rowDiffer.diff(this.rows)) {
             if (!this.externalSorting) {
-                this._internalRows = utils_1.sortRows(this._rows, this.columns, this.sorts);
+                this._internalRows = utils_1.sortRows(this._rows, this._internalColumns, this.sorts);
             }
             else {
                 this._internalRows = this.rows.slice();
@@ -539,7 +549,7 @@ var DatatableComponent = /** @class */ (function () {
         if (forceIdx === void 0) { forceIdx = -1; }
         if (allowBleed === void 0) { allowBleed = this.scrollbarH; }
         if (!columns)
-            return;
+            return undefined;
         var width = this.innerWidth;
         if (this.scrollbarV) {
             width = width - this.scrollbarHelper.width;
@@ -750,85 +760,254 @@ var DatatableComponent = /** @class */ (function () {
     DatatableComponent.prototype.onBodySelect = function (event) {
         this.select.emit(event);
     };
-    DatatableComponent.decorators = [
-        { type: core_1.Component, args: [{
-                    selector: 'ngx-datatable',
-                    template: "\n    <div\n      visibilityObserver\n      (visible)=\"recalculate()\">\n      <datatable-header\n        *ngIf=\"headerHeight\"\n        [sorts]=\"sorts\"\n        [sortType]=\"sortType\"\n        [scrollbarH]=\"scrollbarH\"\n        [innerWidth]=\"innerWidth\"\n        [offsetX]=\"offsetX\"\n        [dealsWithGroup]=\"groupedRows\"\n        [columns]=\"_internalColumns\"\n        [headerHeight]=\"headerHeight\"\n        [reorderable]=\"reorderable\"\n        [sortAscendingIcon]=\"cssClasses.sortAscending\"\n        [sortDescendingIcon]=\"cssClasses.sortDescending\"\n        [allRowsSelected]=\"allRowsSelected\"\n        [selectionType]=\"selectionType\"\n        (sort)=\"onColumnSort($event)\"\n        (resize)=\"onColumnResize($event)\"\n        (reorder)=\"onColumnReorder($event)\"\n        (select)=\"onHeaderSelect($event)\"\n        (columnContextmenu)=\"onColumnContextmenu($event)\">\n      </datatable-header>\n      <datatable-body\n        [groupRowsBy]=\"groupRowsBy\"\n        [groupedRows]=\"groupedRows\"\n        [rows]=\"_internalRows\"\n        [groupExpansionDefault]=\"groupExpansionDefault\"\n        [scrollbarV]=\"scrollbarV\"\n        [scrollbarH]=\"scrollbarH\"\n        [loadingIndicator]=\"loadingIndicator\"\n        [externalPaging]=\"externalPaging\"\n        [rowHeight]=\"rowHeight\"\n        [rowCount]=\"rowCount\"\n        [offset]=\"offset\"\n        [trackByProp]=\"trackByProp\"\n        [columns]=\"_internalColumns\"\n        [pageSize]=\"pageSize\"\n        [offsetX]=\"offsetX\"\n        [rowDetail]=\"rowDetail\"\n        [groupHeader]=\"groupHeader\"\n        [selected]=\"selected\"\n        [innerWidth]=\"innerWidth\"\n        [bodyHeight]=\"bodyHeight\"\n        [selectionType]=\"selectionType\"\n        [emptyMessage]=\"messages.emptyMessage\"\n        [rowIdentity]=\"rowIdentity\"\n        [rowClass]=\"rowClass\"\n        [selectCheck]=\"selectCheck\"\n        (page)=\"onBodyPage($event)\"\n        (activate)=\"activate.emit($event)\"\n        (rowContextmenu)=\"onRowContextmenu($event)\"\n        (select)=\"onBodySelect($event)\"\n        (scroll)=\"onBodyScroll($event)\">\n      </datatable-body>\n      <datatable-footer\n        *ngIf=\"footerHeight\"\n        [rowCount]=\"rowCount\"\n        [pageSize]=\"pageSize\"\n        [offset]=\"offset\"\n        [footerHeight]=\"footerHeight\"\n        [footerTemplate]=\"footer\"\n        [totalMessage]=\"messages.totalMessage\"\n        [pagerLeftArrowIcon]=\"cssClasses.pagerLeftArrow\"\n        [pagerRightArrowIcon]=\"cssClasses.pagerRightArrow\"\n        [pagerPreviousIcon]=\"cssClasses.pagerPrevious\"\n        [selectedCount]=\"selected.length\"\n        [selectedMessage]=\"!!selectionType && messages.selectedMessage\"\n        [pagerNextIcon]=\"cssClasses.pagerNext\"\n        (page)=\"onFooterPage($event)\">\n      </datatable-footer>\n    </div>\n  ",
-                    changeDetection: core_1.ChangeDetectionStrategy.OnPush,
-                    encapsulation: core_1.ViewEncapsulation.None,
-                    styleUrls: ['./datatable.component.css'],
-                    host: {
-                        class: 'ngx-datatable'
-                    }
-                },] },
-    ];
-    /** @nocollapse */
-    DatatableComponent.ctorParameters = function () { return [
-        { type: services_1.ScrollbarHelper, },
-        { type: core_1.ChangeDetectorRef, },
-        { type: core_1.ElementRef, },
-        { type: core_1.KeyValueDiffers, },
-    ]; };
-    DatatableComponent.propDecorators = {
-        'rows': [{ type: core_1.Input },],
-        'groupRowsBy': [{ type: core_1.Input },],
-        'groupedRows': [{ type: core_1.Input },],
-        'columns': [{ type: core_1.Input },],
-        'selected': [{ type: core_1.Input },],
-        'scrollbarV': [{ type: core_1.Input },],
-        'scrollbarH': [{ type: core_1.Input },],
-        'rowHeight': [{ type: core_1.Input },],
-        'columnMode': [{ type: core_1.Input },],
-        'headerHeight': [{ type: core_1.Input },],
-        'footerHeight': [{ type: core_1.Input },],
-        'externalPaging': [{ type: core_1.Input },],
-        'externalSorting': [{ type: core_1.Input },],
-        'limit': [{ type: core_1.Input },],
-        'count': [{ type: core_1.Input },],
-        'offset': [{ type: core_1.Input },],
-        'loadingIndicator': [{ type: core_1.Input },],
-        'selectionType': [{ type: core_1.Input },],
-        'reorderable': [{ type: core_1.Input },],
-        'sortType': [{ type: core_1.Input },],
-        'sorts': [{ type: core_1.Input },],
-        'cssClasses': [{ type: core_1.Input },],
-        'messages': [{ type: core_1.Input },],
-        'rowIdentity': [{ type: core_1.Input },],
-        'rowClass': [{ type: core_1.Input },],
-        'selectCheck': [{ type: core_1.Input },],
-        'groupExpansionDefault': [{ type: core_1.Input },],
-        'trackByProp': [{ type: core_1.Input },],
-        'scroll': [{ type: core_1.Output },],
-        'activate': [{ type: core_1.Output },],
-        'select': [{ type: core_1.Output },],
-        'sort': [{ type: core_1.Output },],
-        'page': [{ type: core_1.Output },],
-        'reorder': [{ type: core_1.Output },],
-        'resize': [{ type: core_1.Output },],
-        'tableContextmenu': [{ type: core_1.Output },],
-        'isFixedHeader': [{ type: core_1.HostBinding, args: ['class.fixed-header',] },],
-        'isFixedRow': [{ type: core_1.HostBinding, args: ['class.fixed-row',] },],
-        'isVertScroll': [{ type: core_1.HostBinding, args: ['class.scroll-vertical',] },],
-        'isHorScroll': [{ type: core_1.HostBinding, args: ['class.scroll-horz',] },],
-        'isSelectable': [{ type: core_1.HostBinding, args: ['class.selectable',] },],
-        'isCheckboxSelection': [{ type: core_1.HostBinding, args: ['class.checkbox-selection',] },],
-        'isCellSelection': [{ type: core_1.HostBinding, args: ['class.cell-selection',] },],
-        'isSingleSelection': [{ type: core_1.HostBinding, args: ['class.single-selection',] },],
-        'isMultiSelection': [{ type: core_1.HostBinding, args: ['class.multi-selection',] },],
-        'isMultiClickSelection': [{ type: core_1.HostBinding, args: ['class.multi-click-selection',] },],
-        'columnTemplates': [{ type: core_1.ContentChildren, args: [columns_1.DataTableColumnDirective,] },],
-        'rowDetail': [{ type: core_1.ContentChild, args: [row_detail_1.DatatableRowDetailDirective,] },],
-        'groupHeader': [{ type: core_1.ContentChild, args: [body_group_header_directive_1.DatatableGroupHeaderDirective,] },],
-        'footer': [{ type: core_1.ContentChild, args: [footer_1.DatatableFooterDirective,] },],
-        'bodyComponent': [{ type: core_1.ViewChild, args: [body_1.DataTableBodyComponent,] },],
-        'onWindowResize': [{ type: core_1.HostListener, args: ['window:resize',] },],
-    };
     __decorate([
+        core_1.Input(),
+        __metadata("design:type", Object),
+        __metadata("design:paramtypes", [Object])
+    ], DatatableComponent.prototype, "rows", null);
+    __decorate([
+        core_1.Input(),
+        __metadata("design:type", String),
+        __metadata("design:paramtypes", [String])
+    ], DatatableComponent.prototype, "groupRowsBy", null);
+    __decorate([
+        core_1.Input(),
+        __metadata("design:type", Array)
+    ], DatatableComponent.prototype, "groupedRows", void 0);
+    __decorate([
+        core_1.Input(),
+        __metadata("design:type", Array),
+        __metadata("design:paramtypes", [Array])
+    ], DatatableComponent.prototype, "columns", null);
+    __decorate([
+        core_1.Input(),
+        __metadata("design:type", Array)
+    ], DatatableComponent.prototype, "selected", void 0);
+    __decorate([
+        core_1.Input(),
+        __metadata("design:type", Boolean)
+    ], DatatableComponent.prototype, "scrollbarV", void 0);
+    __decorate([
+        core_1.Input(),
+        __metadata("design:type", Boolean)
+    ], DatatableComponent.prototype, "scrollbarH", void 0);
+    __decorate([
+        core_1.Input(),
+        __metadata("design:type", Number)
+    ], DatatableComponent.prototype, "rowHeight", void 0);
+    __decorate([
+        core_1.Input(),
+        __metadata("design:type", String)
+    ], DatatableComponent.prototype, "columnMode", void 0);
+    __decorate([
+        core_1.Input(),
+        __metadata("design:type", Object)
+    ], DatatableComponent.prototype, "headerHeight", void 0);
+    __decorate([
+        core_1.Input(),
+        __metadata("design:type", Number)
+    ], DatatableComponent.prototype, "footerHeight", void 0);
+    __decorate([
+        core_1.Input(),
+        __metadata("design:type", Boolean)
+    ], DatatableComponent.prototype, "externalPaging", void 0);
+    __decorate([
+        core_1.Input(),
+        __metadata("design:type", Boolean)
+    ], DatatableComponent.prototype, "externalSorting", void 0);
+    __decorate([
+        core_1.Input(),
+        __metadata("design:type", Number),
+        __metadata("design:paramtypes", [Number])
+    ], DatatableComponent.prototype, "limit", null);
+    __decorate([
+        core_1.Input(),
+        __metadata("design:type", Number),
+        __metadata("design:paramtypes", [Number])
+    ], DatatableComponent.prototype, "count", null);
+    __decorate([
+        core_1.Input(),
+        __metadata("design:type", Number),
+        __metadata("design:paramtypes", [Number])
+    ], DatatableComponent.prototype, "offset", null);
+    __decorate([
+        core_1.Input(),
+        __metadata("design:type", Boolean)
+    ], DatatableComponent.prototype, "loadingIndicator", void 0);
+    __decorate([
+        core_1.Input(),
+        __metadata("design:type", String)
+    ], DatatableComponent.prototype, "selectionType", void 0);
+    __decorate([
+        core_1.Input(),
+        __metadata("design:type", Boolean)
+    ], DatatableComponent.prototype, "reorderable", void 0);
+    __decorate([
+        core_1.Input(),
+        __metadata("design:type", String)
+    ], DatatableComponent.prototype, "sortType", void 0);
+    __decorate([
+        core_1.Input(),
+        __metadata("design:type", Array)
+    ], DatatableComponent.prototype, "sorts", void 0);
+    __decorate([
+        core_1.Input(),
+        __metadata("design:type", Object)
+    ], DatatableComponent.prototype, "cssClasses", void 0);
+    __decorate([
+        core_1.Input(),
+        __metadata("design:type", Object)
+    ], DatatableComponent.prototype, "messages", void 0);
+    __decorate([
+        core_1.Input(),
+        __metadata("design:type", Function)
+    ], DatatableComponent.prototype, "rowIdentity", void 0);
+    __decorate([
+        core_1.Input(),
+        __metadata("design:type", Object)
+    ], DatatableComponent.prototype, "rowClass", void 0);
+    __decorate([
+        core_1.Input(),
+        __metadata("design:type", Object)
+    ], DatatableComponent.prototype, "selectCheck", void 0);
+    __decorate([
+        core_1.Input(),
+        __metadata("design:type", Function)
+    ], DatatableComponent.prototype, "displayCheck", void 0);
+    __decorate([
+        core_1.Input(),
+        __metadata("design:type", Boolean)
+    ], DatatableComponent.prototype, "groupExpansionDefault", void 0);
+    __decorate([
+        core_1.Input(),
+        __metadata("design:type", String)
+    ], DatatableComponent.prototype, "trackByProp", void 0);
+    __decorate([
+        core_1.Output(),
+        __metadata("design:type", core_1.EventEmitter)
+    ], DatatableComponent.prototype, "scroll", void 0);
+    __decorate([
+        core_1.Output(),
+        __metadata("design:type", core_1.EventEmitter)
+    ], DatatableComponent.prototype, "activate", void 0);
+    __decorate([
+        core_1.Output(),
+        __metadata("design:type", core_1.EventEmitter)
+    ], DatatableComponent.prototype, "select", void 0);
+    __decorate([
+        core_1.Output(),
+        __metadata("design:type", core_1.EventEmitter)
+    ], DatatableComponent.prototype, "sort", void 0);
+    __decorate([
+        core_1.Output(),
+        __metadata("design:type", core_1.EventEmitter)
+    ], DatatableComponent.prototype, "page", void 0);
+    __decorate([
+        core_1.Output(),
+        __metadata("design:type", core_1.EventEmitter)
+    ], DatatableComponent.prototype, "reorder", void 0);
+    __decorate([
+        core_1.Output(),
+        __metadata("design:type", core_1.EventEmitter)
+    ], DatatableComponent.prototype, "resize", void 0);
+    __decorate([
+        core_1.Output(),
+        __metadata("design:type", Object)
+    ], DatatableComponent.prototype, "tableContextmenu", void 0);
+    __decorate([
+        core_1.HostBinding('class.fixed-header'),
+        __metadata("design:type", Boolean),
+        __metadata("design:paramtypes", [])
+    ], DatatableComponent.prototype, "isFixedHeader", null);
+    __decorate([
+        core_1.HostBinding('class.fixed-row'),
+        __metadata("design:type", Boolean),
+        __metadata("design:paramtypes", [])
+    ], DatatableComponent.prototype, "isFixedRow", null);
+    __decorate([
+        core_1.HostBinding('class.scroll-vertical'),
+        __metadata("design:type", Boolean),
+        __metadata("design:paramtypes", [])
+    ], DatatableComponent.prototype, "isVertScroll", null);
+    __decorate([
+        core_1.HostBinding('class.scroll-horz'),
+        __metadata("design:type", Boolean),
+        __metadata("design:paramtypes", [])
+    ], DatatableComponent.prototype, "isHorScroll", null);
+    __decorate([
+        core_1.HostBinding('class.selectable'),
+        __metadata("design:type", Boolean),
+        __metadata("design:paramtypes", [])
+    ], DatatableComponent.prototype, "isSelectable", null);
+    __decorate([
+        core_1.HostBinding('class.checkbox-selection'),
+        __metadata("design:type", Boolean),
+        __metadata("design:paramtypes", [])
+    ], DatatableComponent.prototype, "isCheckboxSelection", null);
+    __decorate([
+        core_1.HostBinding('class.cell-selection'),
+        __metadata("design:type", Boolean),
+        __metadata("design:paramtypes", [])
+    ], DatatableComponent.prototype, "isCellSelection", null);
+    __decorate([
+        core_1.HostBinding('class.single-selection'),
+        __metadata("design:type", Boolean),
+        __metadata("design:paramtypes", [])
+    ], DatatableComponent.prototype, "isSingleSelection", null);
+    __decorate([
+        core_1.HostBinding('class.multi-selection'),
+        __metadata("design:type", Boolean),
+        __metadata("design:paramtypes", [])
+    ], DatatableComponent.prototype, "isMultiSelection", null);
+    __decorate([
+        core_1.HostBinding('class.multi-click-selection'),
+        __metadata("design:type", Boolean),
+        __metadata("design:paramtypes", [])
+    ], DatatableComponent.prototype, "isMultiClickSelection", null);
+    __decorate([
+        core_1.ContentChildren(columns_1.DataTableColumnDirective),
+        __metadata("design:type", core_1.QueryList),
+        __metadata("design:paramtypes", [core_1.QueryList])
+    ], DatatableComponent.prototype, "columnTemplates", null);
+    __decorate([
+        core_1.ContentChild(row_detail_1.DatatableRowDetailDirective),
+        __metadata("design:type", row_detail_1.DatatableRowDetailDirective)
+    ], DatatableComponent.prototype, "rowDetail", void 0);
+    __decorate([
+        core_1.ContentChild(body_group_header_directive_1.DatatableGroupHeaderDirective),
+        __metadata("design:type", body_group_header_directive_1.DatatableGroupHeaderDirective)
+    ], DatatableComponent.prototype, "groupHeader", void 0);
+    __decorate([
+        core_1.ContentChild(footer_1.DatatableFooterDirective),
+        __metadata("design:type", footer_1.DatatableFooterDirective)
+    ], DatatableComponent.prototype, "footer", void 0);
+    __decorate([
+        core_1.ViewChild(body_1.DataTableBodyComponent),
+        __metadata("design:type", body_1.DataTableBodyComponent)
+    ], DatatableComponent.prototype, "bodyComponent", void 0);
+    __decorate([
+        core_1.HostListener('window:resize'),
         utils_1.throttleable(5),
         __metadata("design:type", Function),
         __metadata("design:paramtypes", []),
         __metadata("design:returntype", void 0)
     ], DatatableComponent.prototype, "onWindowResize", null);
+    DatatableComponent = __decorate([
+        core_1.Component({
+            selector: 'ngx-datatable',
+            template: "\n    <div\n      visibilityObserver\n      (visible)=\"recalculate()\">\n      <datatable-header\n        *ngIf=\"headerHeight\"\n        [sorts]=\"sorts\"\n        [sortType]=\"sortType\"\n        [scrollbarH]=\"scrollbarH\"\n        [innerWidth]=\"innerWidth\"\n        [offsetX]=\"offsetX\"\n        [dealsWithGroup]=\"groupedRows\"\n        [columns]=\"_internalColumns\"\n        [headerHeight]=\"headerHeight\"\n        [reorderable]=\"reorderable\"\n        [sortAscendingIcon]=\"cssClasses.sortAscending\"\n        [sortDescendingIcon]=\"cssClasses.sortDescending\"\n        [allRowsSelected]=\"allRowsSelected\"\n        [selectionType]=\"selectionType\"\n        (sort)=\"onColumnSort($event)\"\n        (resize)=\"onColumnResize($event)\"\n        (reorder)=\"onColumnReorder($event)\"\n        (select)=\"onHeaderSelect($event)\"\n        (columnContextmenu)=\"onColumnContextmenu($event)\">\n      </datatable-header>\n      <datatable-body\n        [groupRowsBy]=\"groupRowsBy\"\n        [groupedRows]=\"groupedRows\"\n        [rows]=\"_internalRows\"\n        [groupExpansionDefault]=\"groupExpansionDefault\"\n        [scrollbarV]=\"scrollbarV\"\n        [scrollbarH]=\"scrollbarH\"\n        [loadingIndicator]=\"loadingIndicator\"\n        [externalPaging]=\"externalPaging\"\n        [rowHeight]=\"rowHeight\"\n        [rowCount]=\"rowCount\"\n        [offset]=\"offset\"\n        [trackByProp]=\"trackByProp\"\n        [columns]=\"_internalColumns\"\n        [pageSize]=\"pageSize\"\n        [offsetX]=\"offsetX\"\n        [rowDetail]=\"rowDetail\"\n        [groupHeader]=\"groupHeader\"\n        [selected]=\"selected\"\n        [innerWidth]=\"innerWidth\"\n        [bodyHeight]=\"bodyHeight\"\n        [selectionType]=\"selectionType\"\n        [emptyMessage]=\"messages.emptyMessage\"\n        [rowIdentity]=\"rowIdentity\"\n        [rowClass]=\"rowClass\"\n        [selectCheck]=\"selectCheck\"\n        [displayCheck]=\"displayCheck\"\n        (page)=\"onBodyPage($event)\"\n        (activate)=\"activate.emit($event)\"\n        (rowContextmenu)=\"onRowContextmenu($event)\"\n        (select)=\"onBodySelect($event)\"\n        (scroll)=\"onBodyScroll($event)\">\n      </datatable-body>\n      <datatable-footer\n        *ngIf=\"footerHeight\"\n        [rowCount]=\"rowCount\"\n        [pageSize]=\"pageSize\"\n        [offset]=\"offset\"\n        [footerHeight]=\"footerHeight\"\n        [footerTemplate]=\"footer\"\n        [totalMessage]=\"messages.totalMessage\"\n        [pagerLeftArrowIcon]=\"cssClasses.pagerLeftArrow\"\n        [pagerRightArrowIcon]=\"cssClasses.pagerRightArrow\"\n        [pagerPreviousIcon]=\"cssClasses.pagerPrevious\"\n        [selectedCount]=\"selected.length\"\n        [selectedMessage]=\"!!selectionType && messages.selectedMessage\"\n        [pagerNextIcon]=\"cssClasses.pagerNext\"\n        (page)=\"onFooterPage($event)\">\n      </datatable-footer>\n    </div>\n  ",
+            changeDetection: core_1.ChangeDetectionStrategy.OnPush,
+            encapsulation: core_1.ViewEncapsulation.None,
+            styleUrls: ['./datatable.component.css'],
+            host: {
+                class: 'ngx-datatable'
+            }
+        }),
+        __metadata("design:paramtypes", [services_1.ScrollbarHelper,
+            core_1.ChangeDetectorRef,
+            core_1.ElementRef,
+            core_1.KeyValueDiffers])
+    ], DatatableComponent);
     return DatatableComponent;
 }());
 exports.DatatableComponent = DatatableComponent;
