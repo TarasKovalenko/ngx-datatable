@@ -28,7 +28,7 @@ import { MouseEvent } from '../../events';
         [scrollbarV]="scrollbarV"
         [scrollbarH]="scrollbarH"
         [scrollHeight]="scrollHeight"
-        [scrollWidth]="columnGroupWidths.total"
+        [scrollWidth]="columnGroupWidths?.total"
         (scroll)="onBodyScroll($event)">
         <datatable-row-wrapper
           [groupedRows]="groupedRows"
@@ -79,7 +79,7 @@ import { MouseEvent } from '../../events';
       </datatable-scroller>
       <div
         class="empty-row"
-        *ngIf="!rows?.length"
+        *ngIf="!rows?.length && !loadingIndicator"
         [innerHTML]="emptyMessage">
       </div>
     </datatable-selection>
@@ -391,7 +391,8 @@ export class DataTableBodyComponent implements OnInit, OnDestroy {
       }       
     }
     
-    this.temp = temp;   
+    this.temp = temp;
+    this.cd.detectChanges();
   }
 
   /**
